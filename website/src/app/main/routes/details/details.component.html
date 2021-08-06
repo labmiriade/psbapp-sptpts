@@ -1,0 +1,48 @@
+<div class="d-flex justify-content-center py-2 mb-3">
+  <div class="col-12">
+    <div class="d-flex justify-content-center">
+      <button type="button" class="btn btn-dark btn-sm mt-2" (click)="onSearchClick()">Torna alla ricerca</button>
+    </div>
+    <div class="details__map mt-2">
+      <app-aws-map-viewer [pins]="mapPin | async" [zoomToPins]="true" [zoom]="12"></app-aws-map-viewer>
+    </div>
+    <div class="details__name mt-4 text-center">{{ (place$ | async)?.name }}</div>
+    <div *ngIf="(place$ | async)?.streetName" class="details__street text-center">
+      {{ street | async }}
+    </div>
+
+    <div *ngIf="(place$ | async)?.city" class="details__street text-center">
+      {{ city | async }}
+    </div>
+    <div class="btn-toolbar d-flex justify-content-center mt-2" role="toolbar">
+      <a
+        *ngIf="(place$ | async)?.email"
+        href="https://mail.google.com/mail/?view=cm&to={{ (place$ | async)?.email }}"
+        role="button"
+        class="btn btn-primary mx-2 mt-2"
+        ><fa-icon icon="envelope"></fa-icon> {{ (place$ | async)?.email }}</a
+      >
+    </div>
+    <div class="details__description mt-3 text-center" *ngIf="(place$ | async)?.description">
+      <strong>Descrizione</strong>
+      <br />{{ (place$ | async)?.description }}
+    </div>
+    <div class="mt-2 mb-3 text-center details__info">
+      <strong>Informazioni</strong>
+      <div *ngIf="(place$ | async)?.category">Categoria: {{ (place$ | async)?.category }}</div>
+      <div *ngIf="(place$ | async)?.activity">Attività: {{ (place$ | async)?.activity }}</div>
+      <div *ngIf="(place$ | async)?.accessType">Tipo di accesso: {{ (place$ | async)?.accessType }}</div>
+      <div *ngIf="(place$ | async)?.contact">Contatto: {{ (place$ | async)?.contact }}</div>
+      <div>
+        <a
+          *ngIf="siteCheck() | async"
+          href="{{ (place$ | async)?.website }}"
+          role="button"
+          target="_blank"
+          class="btn btn-primary mx-2 mt-2"
+          ><fa-icon icon="globe"></fa-icon> Vai al sito</a
+        >
+      </div>
+    </div>
+  </div>
+</div>
