@@ -1,9 +1,6 @@
 import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { MainService } from './services/main.service';
-import { ToastService } from './services/toast.service';
-import { GeolocationService } from './services/geolocation.service';
 import { BaseUrlInterceptorService } from './interceptors/base-url-interceptor.service';
 import { EnvironmentService } from './services/environment.service';
 

@@ -49,3 +49,6 @@ Thumbs.db
 *.wmv
 
 website/src/assets/config-env.json
+
+# python virtualenv
+venv

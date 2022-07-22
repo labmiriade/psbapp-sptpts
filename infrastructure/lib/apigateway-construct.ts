@@ -1,17 +1,22 @@
-import * as cdk from '@aws-cdk/core';
-import * as apigw from '@aws-cdk/aws-apigateway';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as iam from '@aws-cdk/aws-iam';
-import * as logs from '@aws-cdk/aws-logs';
-import * as dynamo from '@aws-cdk/aws-dynamodb';
+import * as cdk from 'aws-cdk-lib';
+import * as apigw from 'aws-cdk-lib/aws-apigateway';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
 import { OpenAPI } from './open-api';
-import { JsonSchema } from '@aws-cdk/aws-apigateway';
+import { Construct } from 'constructs';
+import { JsonSchema } from 'aws-cdk-lib/aws-apigateway';
 
 export interface ApiGatewayConstructProps {
   /**
    * Function per la ricerca di places
    */
   searchLambda: lambda.IFunction;
+  /**
+   * Function per il get di un place
+   */
+  getPlaceLambda: lambda.IFunction;
   /**
    * DynamoDB Table con i dati
    */
@@ -24,8 +29,8 @@ export interface ApiGatewayConstructProps {
  * Le funzioni lambda vengono passate al costrutture tramite `props`, mentre le integrazioni
  * di tipo AWS (chiamate dirette a DynamoDB) vengono costruite qui.
  */
-export class ApiGatewayConstruct extends cdk.Construct {
-  constructor(scope: cdk.Construct, id: string, props: ApiGatewayConstructProps) {
+export class ApiGatewayConstruct extends Construct {
+  constructor(scope: Construct, id: string, props: ApiGatewayConstructProps) {
     super(scope, id);
 
     // L'API Gateway che servirà l'API.
@@ -110,39 +115,7 @@ export class ApiGatewayConstruct extends cdk.Construct {
     });
 
     // integration per ottenere le Place Info
-    const getPlaceInteg = new apigw.AwsIntegration({
-      service: 'dynamodb',
-      action: 'GetItem',
-      options: {
-        credentialsRole: dataTableReadWriteRole,
-        requestTemplates: {
-          'application/json': JSON.stringify({
-            TableName: props.dataTable.tableName,
-            Key: {
-              pk: { S: "p-$input.params('placeId')" },
-              sk: { S: 'p-info' },
-            },
-            ConsistentRead: false,
-          }),
-        },
-        passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-        integrationResponses: [
-          {
-            statusCode: '200',
-            responseTemplates: {
-              'application/json': placeInfoResponseTemplate,
-            },
-          },
-          {
-            selectionPattern: '404',
-            statusCode: '404',
-            responseTemplates: {
-              'application/json': `$input.params('placeId') not found`,
-            },
-          },
-        ],
-      },
-    });
+    const getPlaceInteg = new apigw.LambdaIntegration(props.getPlaceLambda, { proxy: true });
 
     // creo la risorsa `/p`
     const p = api.root.addResource('p');
@@ -219,34 +192,3 @@ const categoriesResponseTemplate = `
     {"categories": $item.data.SS}
     #end
     `;
-
-const placeInfoResponseTemplate = `
-#set( $item = $input.path('$.Item') )
-#if ( $item == "" )
-#set( $context.responseOverride.status = 444 )
-{
-  "userMessage": "Non ho trovato il luogo",
-  "debugMessage": "Il luogo $input.params('placeId') non esiste"
-}
-#set( $item = $input.path('$.Item') )
-#else
-{
-  "placeId": "$input.params('placeId')",
-  "istatCode": "$util.escapeJavaScript("$item.data.M.istatCode.S").replaceAll("\\'","'")",
-  "category": "$util.escapeJavaScript("$item.data.M.category.S").replaceAll("\\'","'")",
-  "description": "$util.escapeJavaScript("$item.data.M.description.S").replaceAll("\\'","'")",
-  "name": "$util.escapeJavaScript("$item.data.M.name.S").replaceAll("\\'","'")",
-  "streetName": "$util.escapeJavaScript("$item.data.M.streetName.S").replaceAll("\\'","'")",
-  "streetNumber": "$util.escapeJavaScript("$item.data.M.streetNumber.S").replaceAll("\\'","'")",
-  "city": "$util.escapeJavaScript("$item.data.M.city.S").replaceAll("\\'","'")",
-  "province": "$util.escapeJavaScript("$item.data.M.province.S").replaceAll("\\'","'")",
-  "website": "$util.escapeJavaScript("$item.data.M.website.S").replaceAll("\\'","'")",
-  "activity": "$util.escapeJavaScript("$item.data.M.activity.S").replaceAll("\\'","'")",
-  "accessType": "$util.escapeJavaScript("$item.data.M.accessType.S").replaceAll("\\'","'")",
-  "contact": "$util.escapeJavaScript("$item.data.M.contact.S").replaceAll("\\'","'")",
-  "email": "$util.escapeJavaScript("$item.data.M.email.S").replaceAll("\\'","'")",
-  "lat": "$util.escapeJavaScript("$item.data.M.lat.S").replaceAll("\\'","'")",
-  "lon": "$util.escapeJavaScript("$item.data.M.lon.S").replaceAll("\\'","'")"
-}
-#end
-`;

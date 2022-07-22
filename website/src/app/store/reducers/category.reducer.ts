@@ -4,7 +4,7 @@ import { searchCategory, searchCategoryFailed, searchCategorySuccess } from '../
 export interface State {
   loading: boolean;
   error: any;
-  results: any | null;
+  results: string[] | null;
 }
 
 const initialState: State = {

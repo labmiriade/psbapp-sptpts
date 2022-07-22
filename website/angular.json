@@ -99,7 +99,8 @@
               "browserTarget": "website:build:test"
             },
             "development": {
-              "browserTarget": "website:build:development"
+              "browserTarget": "website:build:development",
+              "proxyConfig": "src/proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

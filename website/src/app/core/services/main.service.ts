@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PlaceInfo, PlaceList } from '../interfaces/api.interface';
+import { map } from 'rxjs/operators';
+import { CategoriesList, PlaceInfo, PlaceList } from '../interfaces/api.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -25,7 +26,7 @@ export class MainService {
     return this.http.get<PlaceInfo>(`/p/${placeId}`);
   }
 
-  getCategories(): Observable<String[]> {
-    return this.http.get<String[]>('/categories');
+  getCategories(): Observable<CategoriesList> {
+    return this.http.get<CategoriesList>('/categories');
   }
 }
